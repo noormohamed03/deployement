@@ -1,0 +1,17 @@
+name: Release Solution to Production
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    uses: ./.github/workflows/release-solution-to-prod-reusable.yml
+    with:
+      solution_name: Lg_Solution
+      solution_shipping_folder: out/exported/
+      solution_outbound_folder: out/solutions/
+      solution_source_folder: solutions/
+      solution_release_folder: out/release/
+      BUILD_ENVIRONMENT_URL: ${{ secrets.BUILD_ENVIRONMENT_URL }}
+      PROD_ENVIRONMENT_URL: ${{ secrets.PROD_ENVIRONMENT_URL }}
+    secrets: inherit
