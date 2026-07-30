@@ -1,0 +1,57 @@
+name: Export and Branch Solution
+
+on:
+  workflow_dispatch:
+
+env:
+  ENVIRONMENT_URL: ${{ secrets.ENVIRONMENT_URL }}
+  SOLUTION_NAME: Lg_Solution
+
+jobs:
+  export-solution:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Power Platform Tools
+        uses: microsoft/powerplatform-actions/actions-install@v1
+
+      - name: Export Unmanaged Solution
+        uses: microsoft/powerplatform-actions/export-solution@v1
+        with:
+          environment-url: ${{ env.ENVIRONMENT_URL }}
+          app-id: ${{ secrets.CLIENT_ID }}
+          client-secret: ${{ secrets.CLIENT_SECRET }}
+          tenant-id: ${{ secrets.TENANT_ID }}
+          solution-name: ${{ env.SOLUTION_NAME }}
+          solution-output-file: out/${{ env.SOLUTION_NAME }}.zip
+          managed: false
+
+      - name: Unpack Solution
+        uses: microsoft/powerplatform-actions/unpack-solution@v1
+        with:
+          solution-file: out/${{ env.SOLUTION_NAME }}.zip
+          solution-folder: solutions/${{ env.SOLUTION_NAME }}
+          solution-type: Both
+
+      - name: Create Export Branch
+        shell: pwsh
+        run: |
+          $branch = "export-$(Get-Date -Format yyyyMMddHHmmss)"
+          echo "BRANCH_NAME=$branch" >> $env:GITHUB_ENV
+          git checkout -b $branch
+
+      - name: Commit Changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add .
+          git commit -m "Export Power Platform solution" || echo "No changes"
+
+      - name: Push Branch
+        run: |
+          git push origin ${{ env.BRANCH_NAME }}
