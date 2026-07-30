@@ -1,0 +1,45 @@
+name: release-solution-to-prod-reusable
+
+on:
+  workflow_call:
+    inputs:
+      solution_name:
+        required: true
+        type: string
+      solution_file:
+        required: true
+        type: string
+      environment_url:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Power Platform Tools
+        uses: microsoft/powerplatform-actions/actions-install@v1
+
+      - name: Import Managed Solution
+        uses: microsoft/powerplatform-actions/import-solution@v1
+        with:
+          environment-url: ${{ inputs.environment_url }}
+          app-id: ${{ secrets.CLIENT_ID }}
+          client-secret: ${{ secrets.CLIENT_SECRET }}
+          tenant-id: ${{ secrets.TENANT_ID }}
+          solution-file: ${{ inputs.solution_file }}
+          publish-changes: true
+          overwrite-unmanaged-customizations: false
+          skip-lower-version: false
+
+      - name: Publish Customizations
+        uses: microsoft/powerplatform-actions/publish-solution@v1
+        with:
+          environment-url: ${{ inputs.environment_url }}
+          app-id: ${{ secrets.CLIENT_ID }}
+          client-secret: ${{ secrets.CLIENT_SECRET }}
+          tenant-id: ${{ secrets.TENANT_ID }}
